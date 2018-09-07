@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import pandas as pd
+import numpy as np
 import sys
 import re
 
@@ -91,6 +93,9 @@ with open(two_in_one, 'r') as fp:
             extract_txt.write(mapping[0])
         else:
             failed_match.write(mapping[1])
+
+df = pd.read_table(txt)
+exact_distance = df['distance'].mode()[0]
 
 fq = open(matched_fq, 'w')
 with open(txt, 'r') as fp:
