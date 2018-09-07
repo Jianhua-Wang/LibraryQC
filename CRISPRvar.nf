@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
-params.fastq1 = '/f/mulinlab/jianhua/CRISPRvar/input/test_1.clean.fq'
-params.fastq2 = '/f/mulinlab/jianhua/CRISPRvar/input/test_2.clean.fq'
+params.fastq1 = '/f/mulinlab/jianhua/CRISPRvar/input/test_1.fq'
+params.fastq2 = '/f/mulinlab/jianhua/CRISPRvar/input/test_2.fq'
 
 params.output_dir = '/f/mulinlab/jianhua/CRISPRvar/output/'
 
@@ -32,7 +32,7 @@ process build_lib_index {
     script:
         template 'build_lib_index.py'
 }
-
+/*
 process fastqtosam {
     input:
         file fq1 from fq1
@@ -47,15 +47,17 @@ process fastqtosam {
         picard FastqToSam F1=${fq1} F2=${fq2} O=fastqtosam.sam SM=${base_name} RG=${base_name}
         """
 }
-
+*/
 process extract_sg_from_sam {
     input:
-        file sam from samwith2fq
+        file fq1 from fq1
+        file fq2 from fq2
         publishDir params.output_dir, pattern: "*.{txt,fastq}", overwrite:true, mode:'copy'
     output:
         file 'extract.txt' into extract_sgrna
         file 'fail_pattern_mapping.fastq' into fail_pattern_mapping
         file 'succeed_pattern_mapping.fastq' into succeed_pattern_mapping_fq
+        file 'two_in_one.txt' into two_in_one_txt
     script:
         template 'extract_sg_from_sam.py'
 }
