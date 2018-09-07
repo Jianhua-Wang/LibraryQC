@@ -25,4 +25,4 @@ with open(fasta, 'w') as f:
             else:
                 f.write('>' + str(ith-1) + ':na\\n' + line[0]  + '\\n')
 
-call('bowtie-build -f lib.fasta lib', shell=True)
+call('bwa index lib.fasta', shell=True)

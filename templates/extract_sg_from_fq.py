@@ -3,6 +3,7 @@
 import pandas as pd
 import numpy as np
 import sys
+import os
 import re
 
 if len(sys.argv) == 1:
@@ -107,3 +108,5 @@ with open(txt, 'r') as fp:
         line = line.split()
         if line[2] == '58':
             fq.write('@'+line[0]+'\\n'+line[1]+'\\n+\\n'+line[4]+'\\n')
+
+os.remove('two_in_one.txt')

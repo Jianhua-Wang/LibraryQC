@@ -15,4 +15,4 @@ with open(fasta, 'w') as f:
         for line in fp:
             f.write('>vector\\n' + line)
 
-call('bowtie2-build -f vector.fasta vector', shell=True)
+call('bwa index vector.fasta', shell=True)

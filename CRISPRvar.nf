@@ -57,9 +57,8 @@ process extract_sg_from_sam {
         file 'extract.txt' into extract_sgrna
         file 'fail_pattern_mapping.fastq' into fail_pattern_mapping
         file 'succeed_pattern_mapping.fastq' into succeed_pattern_mapping_fq
-        file 'two_in_one.txt' into two_in_one_txt
     script:
-        template 'extract_sg_from_sam.py'
+        template 'extract_sg_from_fq.py'
 }
 
 process maptolib {
@@ -71,7 +70,7 @@ process maptolib {
         file 'maptolib.sam' into maptolib_sam
     script:
         """
-        bowtie -q -S -p 8 -l 20 -n 3 lib ${fastq} maptolib.sam --norc
+        bwa aln -l 20 -k 3 -t 4 lib.fasta ${fastq} > maptolib.sam
         """
 }
 
@@ -92,12 +91,10 @@ process maptovector {
         file fastq from fail_pattern_mapping
         publishDir params.output_dir, pattern: "*.{txt,sam}", overwrite:true, mode:'copy'
     output:
-        file 'maptovector.txt' into maptovector_txt
         file 'maptovector.sam' into maptovector_sam
     script:
         """
-        bowtie2 -x vector -p 8 -U ${fastq} -S maptovector.sam
-        cat .command.log > maptovector.txt
+        bwa mem -t 4 vector.fasta ${fastq} > maptovector.sam
         """
 }
 
