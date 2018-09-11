@@ -7,11 +7,13 @@ import os
 import re
 
 if len(sys.argv) == 1:
-    sys.argv=["extract_sg_from_sam.py","$fq1","$fq2","$pattern_str"]
+    sys.argv=["extract_sg_from_sam.py","$fq1","$fq2","$vector_txt","$left_shot","$right_shot"]
 
 fq1 = sys.argv[1]
 fq2 = sys.argv[2]
-pattern = sys.argv[3]
+vector = sys.argv[3]
+left_shot = sys.argv[4]
+right_shot = sys.argv[5]
 
 two_in_one = 'two_in_one.txt'
 txt = 'extract.txt'
@@ -39,6 +41,20 @@ with open(fq1,'r') as f1, open(fq2,'r') as f2:
 
 two_in_one_txt.close()
 
+with open(vector, 'r') as fp:
+    ith = 0
+    for line in fp:
+        ith += 1
+        if ith == 2:
+            left = line[:-1]
+        if ith == 4:
+            right = line[:-1]
+
+left_pattern = left[-int(left_shot):].upper()
+right_pattern = right[:int(right_shot)].upper()
+
+pattern = '([ATCG]*'+left_pattern+')([ACTG]{19,20})('+right_pattern+'[ATCG]*)'
+
 def DNA_rc(sequence):
     sequence = sequence.replace('A', 't')
     sequence = sequence.replace('T', 'a')
@@ -54,9 +70,9 @@ failed_match_raw = ['readID','sequence','quality']
 def write_line(matched_raw,read,match):
     matched_raw[0] = read[0]
     matched_raw[1] = match.group(2)
-    matched_raw[2] = len(match.group(1))
+    matched_raw[2] = len(match.group(3))
     matched_raw[3] = 'rc'
-    matched_raw[4] = DNA_rc(read[2])[matched_raw[2]:matched_raw[2]+20]
+    matched_raw[4] = DNA_rc(read[2])[matched_raw[2]:matched_raw[2]+len(match.group(2))]
     matched_raw = list(map (str, matched_raw))
     return matched_raw
 
@@ -106,7 +122,7 @@ with open(txt, 'r') as fp:
         if ith == 1:
             continue
         line = line.split()
-        if line[2] == '58':
+        if line[2] == str(exact_distance):
             fq.write('@'+line[0]+'\\n'+line[1]+'\\n+\\n'+line[4]+'\\n')
 
 os.remove('two_in_one.txt')

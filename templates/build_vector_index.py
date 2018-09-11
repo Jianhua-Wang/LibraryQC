@@ -10,9 +10,16 @@ txt = sys.argv[1]
 
 fasta = 'vector.fasta'
 
+with open(txt, 'r') as fp:
+    ith = 0
+    for line in fp:
+        ith += 1
+        if ith == 2:
+            left = line[:-1]
+        if ith == 4:
+            right = line[:-1]
+
 with open(fasta, 'w') as f:
-    with open(txt, 'r') as fp:
-        for line in fp:
-            f.write('>vector\\n' + line)
+    f.write('>vector\\n'+left+right)
 
 call('bwa index vector.fasta', shell=True)

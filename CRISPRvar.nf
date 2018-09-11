@@ -3,15 +3,20 @@
 params.fastq1 = '/f/mulinlab/jianhua/CRISPRvar/input/test_1.fq'
 params.fastq2 = '/f/mulinlab/jianhua/CRISPRvar/input/test_2.fq'
 
-params.output_dir = '/f/mulinlab/jianhua/CRISPRvar/output/'
-
-params.pattern = '([ATCG]*ACCG)([ACTG]{20})GT{2,4}AGAGC[ATCG]*'
 params.library = '/f/mulinlab/jianhua/CRISPRvar/input/library.csv'
 params.vector = '/f/mulinlab/jianhua/CRISPRvar/input/vector.txt'
+
+params.pattern = '([ATCG]*ACCG)([ACTG]{19,20})GT{2,4}AGAGC[ATCG]*'
+params.left_shot = 4
+params.right_shot = 4
+
+params.output_dir = '/f/mulinlab/jianhua/CRISPRvar/output/'
 
 fq1 = file(params.fastq1)
 fq2 = file(params.fastq2)
 pattern_str = params.pattern
+left_shot = params.left_shot
+right_shot = params.right_shot
 library_csv = file(params.library)
 vector_txt = file(params.vector)
 
@@ -52,6 +57,7 @@ process extract_sg_from_sam {
     input:
         file fq1 from fq1
         file fq2 from fq2
+        file vector_txt from vector_txt
         publishDir params.output_dir, pattern: "*.{txt,fastq}", overwrite:true, mode:'copy'
     output:
         file 'extract.txt' into extract_sgrna
@@ -70,7 +76,8 @@ process maptolib {
         file 'maptolib.sam' into maptolib_sam
     script:
         """
-        bwa aln -l 20 -k 3 -t 4 lib.fasta ${fastq} > maptolib.sam
+        bwa aln -l 20 -k 3 -t 4 lib.fasta ${fastq} > maptolib.sai
+        bwa samse lib.fasta maptolib.sai ${fastq} > maptolib.sam
         """
 }
 
@@ -103,7 +110,7 @@ process calculate_composition {
         file mismatch from mismatch_txt
         file fastq from fq1
         file extract from extract_sgrna
-        file distance_58 from succeed_pattern_mapping_fq
+        file right_position from succeed_pattern_mapping_fq
         file maptovector from maptovector_sam
         file lib_csv from library_csv
         publishDir params.output_dir, pattern: "*.txt", overwrite:true, mode:'copy'

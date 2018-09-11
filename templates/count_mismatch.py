@@ -21,10 +21,10 @@ with open(mismatch, 'w') as f:
                 continue
             ith += 1
             line_sp = line.split()
-            if line_sp[5] == '*':
-                f.write(line_sp[0]+'\\t'+line_sp[2]+'\\t'+line_sp[9]+'\\tunmapped\\t'+line_sp[4]+'\\n')
+            if line_sp[1] == '0':
+                f.write(line_sp[0]+'\\t'+line_sp[2]+'\\t'+line_sp[9]+'\\t'+line_sp[12][-1]+'\\t'+line_sp[4]+'\\n')
             else:
-                f.write(line_sp[0]+'\\t'+line_sp[2]+'\\t'+line_sp[9]+'\\t'+line_sp[13][-1]+'\\t'+line_sp[4]+'\\n')
+                f.write(line_sp[0]+'\\t*\\t'+line_sp[9]+'\\tunmapped\\t'+line_sp[4]+'\\n')
 
 total_df = pd.read_table(mismatch)[['lib_id','sample_seq','mis']].drop_duplicates(subset = 'sample_seq')
 distinct_df = total_df.groupby('lib_id').size()
