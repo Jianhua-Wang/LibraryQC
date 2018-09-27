@@ -72,7 +72,7 @@ def write_line(matched_raw,read,match):
     matched_raw[1] = match.group(2)
     matched_raw[2] = len(match.group(3))
     matched_raw[3] = 'rc'
-    matched_raw[4] = DNA_rc(read[2])[matched_raw[2]:matched_raw[2]+len(match.group(2))]
+    matched_raw[4] = read[2][::-1][matched_raw[2]:matched_raw[2]+len(match.group(2))]
     matched_raw = list(map (str, matched_raw))
     return matched_raw
 
@@ -88,7 +88,7 @@ def pattern_mapping_2reads(read1,read2):
     elif not match1 and not match2:
         fq_line = '@'+read1[0]+' 1'+read_tail+'\\n'+read1[1]+'\\n+\\n'+read1[2]+'\\n@'+read2[0]+' 2'+read_tail+'\\n'+read2[1]+'\\n+\\n'+read2[2]+'\\n'
     else:
-        txt_line = '\\t'.join(write_line(matched_raw,read1,match1))+'\\n'+'\\t'.join(write_line(matched_raw,read2,match2))+'\\n'
+        txt_line = '\\t'.join(write_line(matched_raw,read1,match1))+'\\n'#+'\\t'.join(write_line(matched_raw,read2,match2))+'\\n'
     return txt_line,fq_line
 
 failed_match = open(failed_match_fq, 'w')
