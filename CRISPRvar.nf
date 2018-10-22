@@ -1,24 +1,30 @@
 #!/usr/bin/env nextflow
 
+/*
+ * Author:   Jianhua Wang
+ * Date  :   10-10-2018
+ *
+ *
+ * This is a pipeline for sgRNA Library QC
+ */
+
+SE = params.SE
+
 params.fastq1 = '/f/mulinlab/jianhua/CRISPRvar/input/test_1.fq'
 params.fastq2 = '/f/mulinlab/jianhua/CRISPRvar/input/test_2.fq'
 
 params.library = '/f/mulinlab/jianhua/CRISPRvar/input/library.csv'
 params.vector = '/f/mulinlab/jianhua/CRISPRvar/input/vector.txt'
 
-params.pattern = '([ATCG]*ACCG)([ACTG]{19,20})GT{2,4}AGAGC[ATCG]*'
-params.left_shot = 4
-params.right_shot = 4
-
-params.output_dir = '/f/mulinlab/jianhua/CRISPRvar/output/'
 
 fq1 = file(params.fastq1)
 fq2 = file(params.fastq2)
-pattern_str = params.pattern
-left_shot = params.left_shot
-right_shot = params.right_shot
+
 library_csv = file(params.library)
 vector_txt = file(params.vector)
+
+left_shot = params.left_shot
+right_shot = params.right_shot
 
 process build_vector_index {
     input:
@@ -37,36 +43,39 @@ process build_lib_index {
     script:
         template 'build_lib_index.py'
 }
-/*
-process fastqtosam {
-    input:
-        file fq1 from fq1
-        file fq2 from fq2
-        publishDir params.output_dir, pattern: "*.sam", overwrite:true, mode:'copy'
-    output:
-        file '*.sam' into samwith2fq
-    script:
-        m = fq1 =~ /(.*)(_1)(.*)/
-        base_name = m[0][1]
-        """
-        picard FastqToSam F1=${fq1} F2=${fq2} O=fastqtosam.sam SM=${base_name} RG=${base_name}
-        """
-}
-*/
-process extract_sg_from_sam {
-    input:
-        file fq1 from fq1
-        file fq2 from fq2
-        file vector_txt from vector_txt
-        publishDir params.output_dir, pattern: "*.{txt,fastq}", overwrite:true, mode:'copy'
-    output:
-        file 'extract.txt' into extract_sgrna
-        file 'fail_pattern_mapping.fastq' into fail_pattern_mapping
-        file 'succeed_pattern_mapping.fastq' into succeed_pattern_mapping_fq
-    script:
-        template 'extract_sg_from_fq.py'
-}
 
+if (SE == "F") {
+
+    /*Input are two pair-end fastqs*/
+    process extract_sg_from_sam {
+        input:
+            file fq1 from fq1
+            file fq2 from fq2
+            file vector_txt from vector_txt
+            publishDir params.output_dir, pattern: "*.{txt,fastq}", overwrite:true, mode:'copy'
+        output:
+            file 'extract.txt' into extract_sgrna
+            file 'fail_pattern_mapping.fastq' into fail_pattern_mapping
+            file 'succeed_pattern_mapping.fastq' into succeed_pattern_mapping_fq
+        script:
+            template 'extract_sg_from_fq.py'
+    }
+}else{
+
+    /*Input is a single-end fastq*/
+    process extract_sg_from_SEsam {
+        input:
+            file fq1 from fq1
+            file vector_txt from vector_txt
+            publishDir params.output_dir, pattern: "*.{txt,fastq}", overwrite:true, mode:'copy'
+        output:
+            file 'extract.txt' into extract_sgrna
+            file 'fail_pattern_mapping.fastq' into fail_pattern_mapping
+            file 'succeed_pattern_mapping.fastq' into succeed_pattern_mapping_fq
+        script:
+            template 'extract_sg_from_SEfq.py'
+    }
+}
 process maptolib {
     input:
         file lib from lib_ch.collect()
@@ -144,7 +153,6 @@ process generate_report {
         file distribution from distribution_png
         file norm from norm_png
         file fastq1 from fq1
-        file fastq2 from fq2
         file library from library_csv
         file vector from vector_txt
         publishDir params.output_dir, pattern: "*.html", overwrite:true, mode:'copy'

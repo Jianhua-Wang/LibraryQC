@@ -7,7 +7,7 @@ import os
 import re
 
 if len(sys.argv) == 1:
-    sys.argv=["extract_sg_from_sam.py","$fq1","$fq2","$vector_txt","$left_shot","$right_shot"]
+    sys.argv=["extract_sg_from_fq.py","$fq1","$fq2","$vector_txt","$left_shot","$right_shot"]
 
 fq1 = sys.argv[1]
 fq2 = sys.argv[2]

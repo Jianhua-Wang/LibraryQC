@@ -35,9 +35,14 @@ pbc_qc['Item'] = 'Value'
 pbc_qc['TotalReadPairs'] = len(total_df)
 pbc_qc['DistinctReadPairs'] = pbc_qc['TotalReadPairs'] - distinct_df['*']
 pbc_qc['OneReadPair'] = value_counts[1]
-pbc_qc['TwoReadPairs'] = value_counts[2]
+if 2 in value_counts.index:
+    pbc_qc['TwoReadPairs'] = value_counts[2]
+    pbc_qc['PBC2'] = pbc_qc['OneReadPair']/pbc_qc['TwoReadPairs']
+else:
+    pbc_qc['TwoReadPairs'] = 0
+    pbc_qc['PBC2'] = 'nan'
 pbc_qc['NRF'] = pbc_qc['DistinctReadPairs']/pbc_qc['TotalReadPairs']
 pbc_qc['PBC1'] = pbc_qc['OneReadPair']/pbc_qc['DistinctReadPairs']
-pbc_qc['PBC2'] = pbc_qc['OneReadPair']/pbc_qc['TwoReadPairs']
+
 
 pbc_qc.to_csv(path=pbc_qc_txt,index=True,sep='\\t')

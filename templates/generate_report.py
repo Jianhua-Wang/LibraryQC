@@ -10,7 +10,7 @@ import datetime
 pd.set_option('max_colwidth',200)
 
 if len(sys.argv) == 1:
-    sys.argv=["generate_report.py","$ngs","$lib","$pbc","$pie","$his","$distribution","$norm","$fastq1","$fastq2","$library","$vector","$pattern_str"]
+    sys.argv=["generate_report.py","$ngs","$lib","$pbc","$pie","$his","$distribution","$norm","$fastq1","$library","$vector","$left_shot","$right_shot","$SE"]
 
 ngs = sys.argv[1]
 lib = sys.argv[2]
@@ -21,16 +21,40 @@ his = sys.argv[5]
 distribution = sys.argv[6]
 norm = sys.argv[7]
 
-pattern = sys.argv[12]
 fastq1 = sys.argv[8]
-fastq2 = sys.argv[9]
-library = sys.argv[10]
-vector = sys.argv[11]
+library = sys.argv[9]
+vector = sys.argv[10]
+
+left_shot = sys.argv[11]
+right_shot = sys.argv[12]
+
+SE = sys.argv[13]
 
 today = datetime.date.today()
-sample_name = re.match(r'(.*)(_1)(.*)', fastq1.split('/')[-1]).group(1)
+if SE == 'F':
+    sample_name = re.match(r'(.*)(_1)(.*)', fastq1.split('/')[-1]).group(1)
+else:
+    sample_name = re.match(r'(.*)(f)(.*)', fastq1.split('/')[-1]).group(1)
 
 GEN_HTML = "LibraryQC_Report.html"
+
+def get_pattern(vector_path):
+    with open(vector_path, 'r') as fp:
+        ith = 0
+        for line in fp:
+            ith += 1
+            if ith == 2:
+                left = line[:-1]
+            if ith == 4:
+                right = line[:-1]
+
+    left_pattern = left[-int(left_shot):].upper()
+    right_pattern = right[:int(right_shot)].upper()
+
+    pattern = '([ATCG]*%s)([ACTG]{20})(%s[ATCG]*)'%(left_pattern,right_pattern)
+    return pattern
+
+pattern = get_pattern(vector)
 
 def dftohtml(file):
     if type(file) == str:
@@ -56,7 +80,7 @@ def pngtobase64(png):
     base64_data = base64.b64encode(f.read()).decode("utf-8")
     return base64_data
 
-parameter = {'Parameter': ['pattern','fastq1','fastq2','library','vector'], 'Value': [pattern,fastq1,fastq2,library,vector]}
+parameter = {'Parameter': ['pattern','fastq1','library','vector'], 'Value': [pattern,fastq1,library,vector]}
 parameter_df = pd.DataFrame(data=parameter)
 ngs_df = pd.read_table(ngs)
 pbc_df = pd.read_table(pbc)
