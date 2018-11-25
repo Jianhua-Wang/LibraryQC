@@ -76,6 +76,7 @@ if (SE == "F") {
             template 'extract_sg_from_SEfq.py'
     }
 }
+
 process maptolib {
     input:
         file lib from lib_ch.collect()
