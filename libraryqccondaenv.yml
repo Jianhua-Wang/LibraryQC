@@ -1,0 +1,14 @@
+# Conda environment for sgRNA library qc
+#
+name: libraryqc
+channels:
+- defaults
+dependencies:
+- pip=9.0.1
+- python=3.6.8
+- multiqc
+- fastqc
+- pip:
+  - pandas==0.24.2
+  - mappy==2.17
+  - re==2.2.1

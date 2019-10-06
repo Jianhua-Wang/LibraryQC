@@ -1,0 +1,4 @@
+sample_name,fq_1,fq_2
+day0,/f/jianhua/jianhua_pipeline/LibraryQC/input/data/day0_1.fq.gz,/f/jianhua/jianhua_pipeline/LibraryQC/input/data/day0_1.fq.gz
+day14,/f/jianhua/jianhua_pipeline/LibraryQC/input/data/day14_1.fq.gz,/f/jianhua/jianhua_pipeline/LibraryQC/input/data/day14_1.fq.gz
+vf,/f/jianhua/jianhua_pipeline/LibraryQC/input/data/vf_1.fq.gz,/f/jianhua/jianhua_pipeline/LibraryQC/input/data/vf_1.fq.gz
