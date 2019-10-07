@@ -3,7 +3,7 @@
 
 import mappy as mp
 import pandas as pd
-import re,tempfile,shutil,os,argparse
+import re,tempfile,shutil,os,argparse,subprocess
 from subprocess import call
 from multiprocessing import Pool
 
@@ -61,6 +61,16 @@ sgrna_distribution_header = '''# id: sgrna_distribution
 #    title: sgRNA counts Bar Plot
 #    ylab: \'sgRNA count\''''
 
+position_distribution_header = '''# id: position_distribution
+# section_name: \'Position of mactched\'
+# description: \': the distance between mactch site and 3 end of reads\'
+# format: \'tsv\'
+# plot_type: \'linegraph\'
+# pconfig:
+#    id: \'position_distribution\'
+#    title: position distribution llne Plot
+#    ylab: \'bp from 3 end\''''
+
 def extract_sgrna_from_single_read(read):
     read_out = [0,0,0,0]
     for hit in vector_aligner.map(read[1]):
@@ -72,39 +82,33 @@ def extract_sgrna_from_single_read(read):
     return read_out
 
 def run_pair_end(sample_name,fq1,fq2):
-    read_distribution = pd.Series(data=0,index=['right position','wrong position','empty','one end unmapped','pair end unmapped'])
     sgrna_fq = open(f'{temp_dir}/{sample_name}_sgrna.fq','w')
     sgrna_txt = open(f'{temp_dir}/{sample_name}_sgrna.txt','w')
 
+    print(f'Extract sgRNA from {sample_name}')
     for read1,read2 in zip(mp.fastx_read(fq1,read_comment=True),mp.fastx_read(fq2,read_comment=True)):
         read1,read2 = extract_sgrna_from_single_read(read1),extract_sgrna_from_single_read(read2)
         if len(read1) == 5:
-            if read1[4] == 50:
-                sgrna_txt.write(f'{read1[1]}\n')
-                sgrna_fq.write(f'@{read1[0]}\n{read1[1]}\n+\n{read1[2]}\n')
-                read_distribution['right position'] += 1
-            else:
-                read_distribution['wrong position'] += 1
+            sgrna_txt.write(f'{read1[1]}\t{read1[4]}\t{1}\n')
+            sgrna_fq.write(f'@{read1[0]}\n{read1[1]}\n+\n{read1[2]}\n')
         elif len(read2) == 5:
-            if read2[4] == 50:
-                sgrna_txt.write(f'{read2[1]}\n')
-                sgrna_fq.write(f'@{read2[0]}\n{read2[1]}\n+\n{read2[2]}\n')
-                read_distribution['right position'] += 1
-            else:
-                read_distribution['wrong position'] += 1
+            sgrna_txt.write(f'{read2[1]}\t{read2[4]}\t{1}\n')
+            sgrna_fq.write(f'@{read2[0]}\n{read2[1]}\n+\n{read2[2]}\n')
         elif read1[0] == 0 and read2[0] != 0:
-            read_distribution['one end unmapped'] += 1
+            sgrna_txt.write(f'\t\t{3}\n')
         elif read2[0] == 0 and read1[0] != 0:
-            read_distribution['one end unmapped'] += 1
+            sgrna_txt.write(f'\t\t{3}\n')
         elif read1[0] == 0 and read2[0] == 0:
-            read_distribution['pair end unmapped'] += 1
+            sgrna_txt.write(f'\t\t{4}\n')
         else:
-            read_distribution['empty'] += 1
+            sgrna_txt.write(f'\t\t{2}\n')
     sgrna_fq.close()
     sgrna_txt.close()
 
-    sgrna_count = pd.read_csv(f'{temp_dir}/{sample_name}_sgrna.txt',sep='\t',names=['sgrna'])
-    sgrna_count = sgrna_count['sgrna'].value_counts()
+    print(f'Count sgRNA quantity {sample_name}')
+    sgrna_df = pd.read_csv(f'{temp_dir}/{sample_name}_sgrna.txt',sep='\t',names=['sgrna','position','lable'])
+    sgrna_count = sgrna_df['sgrna'].value_counts()
+    library_df = pd.read_csv(library)
     library_df['count'] = library_df['sequence'].map(sgrna_count)
 
     lib_distribution = pd.Series(data=[len(library_df[library_df['count'].notnull()]),
@@ -114,6 +118,11 @@ def run_pair_end(sample_name,fq1,fq2):
     sgrna_distribution = pd.Series(data=[library_df.drop_duplicates(subset=['sequence'])['count'].sum(),
                                         sgrna_count.sum()-library_df.drop_duplicates(subset=['sequence'])['count'].sum()],
                                   index=['Mapped','Unmapped'])
+    
+    read_distribution = sgrna_df['lable'].value_counts()
+    read_distribution.index = read_distribution.index.map(pd.Series(index=[1,2,3,4],data=['matched','empty','one end unmapped','pair end unmapped']))
+    
+    position_distribution = sgrna_df['position'].value_counts()
 
     sgrna_plot = open(f'{temp_dir}/{sample_name}_sgrna_plot_mqc.txt','w')
     sgrna_plot.write(f'{sgrna_distribution_header}\n{sgrna_distribution.to_csv(sep=chr(9),header=False)}')
@@ -124,8 +133,13 @@ def run_pair_end(sample_name,fq1,fq2):
     read_plot = open(f'{temp_dir}/{sample_name}_read_plot_mqc.txt','w')
     read_plot.write(f'{read_distribution_header}\n{read_distribution.to_csv(sep=chr(9),header=False)}')
     read_plot.close()
-    
-    call(f'fastqc {temp_dir}/{sample_name}_sgrna.fq -o {temp_dir}',shell=True)
+    read_plot = open(f'{temp_dir}/{sample_name}_position_plot_mqc.txt','w')
+    read_plot.write(f'{position_distribution_header}\n{position_distribution.to_csv(sep=chr(9),header=False)}')
+    read_plot.close()
+
+    print(f'Run fastqc on extracted fastq {sample_name}')
+    FNULL = open(os.devnull, 'w')
+    call(f'fastqc {temp_dir}/{sample_name}_sgrna.fq -o {temp_dir}',shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
     shutil.move(f"{temp_dir}/{sample_name}_sgrna.fq", f"{output_dir}/{sample_name}_sgrna.fq")
 
 if __name__ == "__main__":
@@ -140,9 +154,9 @@ if __name__ == "__main__":
 
     work_dir = os.getcwd()
     temp_dir = tempfile.mkdtemp()
+    py_dir = os.path.split(os.path.realpath(__file__))[0]
 
     fq_path_df = pd.read_csv(fq_path)
-    library_df = pd.read_csv(library)
 
     vector_sequence = mp.Aligner(vector)
     with open(f'{temp_dir}/vector1.fa','w') as vector_aligner:
@@ -158,6 +172,10 @@ if __name__ == "__main__":
     p.join()
 
     os.chdir(temp_dir)
-    call(f'multiqc -f --no-data-dir . -o {output_dir}',shell=True)
+    print('Generate report')
+    FNULL = open(os.devnull, 'w')
+    call(f'multiqc -f --no-data-dir . -c {py_dir}/config.yml',shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
     os.chdir(work_dir)
+    shutil.move(f"{temp_dir}/multiqc_report.html", f"{output_dir}/multiqc_report.html")
     shutil.rmtree(temp_dir)
+    print('Completed.')

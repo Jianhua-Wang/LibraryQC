@@ -1,0 +1,13 @@
+title: "sgRNA Library QC Report"
+subtitle: "run all batch in parallel"
+intro_text: "Powered by Multiqc"
+
+report_header_info:
+    - Application Type: 'CRISPR Screening'
+    - Sequencing Setup: '2x150bp (pair-end, non-directional)'
+    - sgRNA length: '19/20bp'
+
+module_order:
+    - fastqc:
+        name: 'FastQC (extracted sgRNA)'
+        info: 'This section of the report shows FastQC results after sgRNA extraction.'

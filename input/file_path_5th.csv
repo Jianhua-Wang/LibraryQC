@@ -1,0 +1,7 @@
+sample_name,fq_1,fq_2
+Day23_1,/f/jianhua/jianhua_pipeline/liangqian/Day23_1_1.clean.fq.gz,/f/jianhua/jianhua_pipeline/liangqian/Day23_1_2.clean.fq.gz
+Day23_2,/f/jianhua/jianhua_pipeline/liangqian/Day23_2_1.clean.fq.gz,/f/jianhua/jianhua_pipeline/liangqian/Day23_2_2.clean.fq.gz
+Day23_3,/f/jianhua/jianhua_pipeline/liangqian/Day23_3_1.clean.fq.gz,/f/jianhua/jianhua_pipeline/liangqian/Day23_3_2.clean.fq.gz
+vf_1,/f/jianhua/jianhua_pipeline/liangqian/vf_1_1.clean.fq.gz,/f/jianhua/jianhua_pipeline/liangqian/vf_1_2.clean.fq.gz
+vf_2,/f/jianhua/jianhua_pipeline/liangqian/vf_2_1.clean.fq.gz,/f/jianhua/jianhua_pipeline/liangqian/vf_2_2.clean.fq.gz
+vf_3,/f/jianhua/jianhua_pipeline/liangqian/vf_3_1.clean.fq.gz,/f/jianhua/jianhua_pipeline/liangqian/vf_3_2.clean.fq.gz
