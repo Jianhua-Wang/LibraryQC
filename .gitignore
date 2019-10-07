@@ -1,6 +1,3 @@
 .git/
-.nextflow*
-work/
-/output/*
 .DS_Store
 ._*
